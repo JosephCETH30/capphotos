@@ -5,27 +5,54 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 
 import { cn } from "@/lib/utils"
 
+// cmdk scrolls its initially-selected item into view before the popup's floating positioner
+// has placed it on screen, and opening/closing the popup moves focus in ways that trigger the
+// browser's default scroll-into-view — both escalate to scrolling the whole page instead of
+// just the popup's own list, producing a visible jump-then-snap-back flash on mobile.
+// Suppressing the two underlying APIs for a short window prevents the jump from ever painting,
+// rather than correcting it after the fact. Reference-counted so overlapping popovers (e.g. the
+// camera picker auto-opening the model dropdown right after a brand is picked) can't clobber
+// each other's restore.
+let scrollJumpGuardDepth = 0
+let originalScrollIntoView: typeof Element.prototype.scrollIntoView | null = null
+let originalFocus: typeof HTMLElement.prototype.focus | null = null
+
+function suppressScrollJumps(): () => void {
+  if (scrollJumpGuardDepth === 0) {
+    originalScrollIntoView = Element.prototype.scrollIntoView
+    originalFocus = HTMLElement.prototype.focus
+    Element.prototype.scrollIntoView = function suppressedScrollIntoView() {}
+    HTMLElement.prototype.focus = function focusWithoutScroll(
+      this: HTMLElement,
+      options?: FocusOptions
+    ) {
+      return originalFocus!.call(this, { ...options, preventScroll: true })
+    }
+  }
+  scrollJumpGuardDepth += 1
+
+  let released = false
+  return () => {
+    if (released) return
+    released = true
+    scrollJumpGuardDepth = Math.max(0, scrollJumpGuardDepth - 1)
+    if (scrollJumpGuardDepth === 0) {
+      if (originalScrollIntoView) Element.prototype.scrollIntoView = originalScrollIntoView
+      if (originalFocus) HTMLElement.prototype.focus = originalFocus
+    }
+  }
+}
+
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
   React.useEffect(() => {
-    // cmdk scrolls its initially-selected item into view before the popup's floating
-    // positioner has placed it on screen, and opening/closing the popup can move focus
-    // in ways that trigger the browser's default scroll-into-view. Either can escalate
-    // to scrolling the whole page instead of just the popup's own list. A capture-phase
-    // click listener catches both the trigger (open) and item selection (close) — unlike
-    // `onOpenChange`, which Base UI only fires for its own internal transitions, not when
-    // a controlled `open` prop is set directly by the consumer (as our pickers do on select).
+    // Capture phase so this always runs before the trigger's or item's own click handler —
+    // and thus before any state update, re-render, or library effect it kicks off.
     function handleClickCapture(event: MouseEvent) {
       const target = event.target as HTMLElement | null
       if (!target?.closest('[data-slot="popover-trigger"], [data-slot="popover-content"]')) return
 
-      const scrollYBeforeTransition = window.scrollY
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (Math.abs(window.scrollY - scrollYBeforeTransition) > 4) {
-            window.scrollTo({ top: scrollYBeforeTransition, behavior: "instant" })
-          }
-        })
-      })
+      const release = suppressScrollJumps()
+      window.setTimeout(release, 350)
     }
 
     document.addEventListener("click", handleClickCapture, true)
