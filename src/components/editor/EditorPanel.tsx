@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import { Download, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { savePhotoRecord } from "@/lib/actions/photos";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -250,20 +251,19 @@ export function EditorPanel({ initialUser }: EditorPanelProps) {
         .upload(imagePath, blob, { contentType: "image/jpeg", upsert: false });
       if (uploadError) throw uploadError;
 
-      const { error: insertError } = await supabase.from("photos").insert({
+      const { error: saveError } = await savePhotoRecord({
         id: photoId,
-        user_id: user.id,
-        caption: caption.trim(),
-        camera_brand_id: cameraSelection.brandId,
-        camera_model_id:
+        caption,
+        cameraBrandId: cameraSelection.brandId,
+        cameraModelId:
           cameraSelection.modelId === CUSTOM_MODEL_ID
             ? encodeCustomModelId(cameraSelection.customModelName?.trim() ?? "Custom")
             : cameraSelection.modelId,
-        image_path: imagePath,
+        imagePath,
       });
-      if (insertError) {
+      if (saveError) {
         await supabase.storage.from("photos").remove([imagePath]);
-        throw insertError;
+        throw new Error(saveError);
       }
 
       toast.success("Saved to your dashboard.");

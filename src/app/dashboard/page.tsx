@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { decryptText } from "@/lib/crypto/text-cipher";
 import { PhotoDashboardGrid } from "@/components/dashboard/PhotoDashboardGrid";
 import type { DashboardPhoto, PhotoRow } from "@/types/photo";
 
@@ -18,7 +19,12 @@ export default async function DashboardPage() {
       const { data } = await supabase.storage
         .from("photos")
         .createSignedUrl(row.image_path, SIGNED_URL_EXPIRY_SECONDS);
-      return { ...row, signedUrl: data?.signedUrl ?? "" };
+      return {
+        ...row,
+        caption: decryptText(row.caption),
+        name: row.name ? decryptText(row.name) : row.name,
+        signedUrl: data?.signedUrl ?? "",
+      };
     })
   );
 

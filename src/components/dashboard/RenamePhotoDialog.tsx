@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
+import { renamePhotoRecord } from "@/lib/actions/photos";
 import {
   Dialog,
   DialogContent,
@@ -33,8 +33,7 @@ export function RenamePhotoDialog({ photo, onRenamed }: RenamePhotoDialogProps) 
   async function handleSave() {
     const name = draft.trim() || null;
     setIsSaving(true);
-    const supabase = createClient();
-    const { error } = await supabase.from("photos").update({ name }).eq("id", photo.id);
+    const { error } = await renamePhotoRecord(photo.id, name);
     setIsSaving(false);
     if (error) {
       toast.error("Couldn't rename this photo. Please try again.");
