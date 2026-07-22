@@ -18,6 +18,7 @@ import {
 } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Navbar } from "@/components/layout/Navbar";
+import { BugReportIdlePrompt } from "@/components/layout/BugReportIdlePrompt";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getAuthUser } from "@/lib/supabase/get-user";
 import "./globals.css";
@@ -157,6 +158,7 @@ export default async function RootLayout({
           <Navbar initialUser={user} />
           <main className="flex flex-1 flex-col">{children}</main>
           <Toaster />
+          <BugReportIdlePrompt />
         </ThemeProvider>
         <Analytics />
       </body>

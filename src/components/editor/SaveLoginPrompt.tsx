@@ -1,11 +1,28 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function SaveLoginPrompt() {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+
   return (
-    <Card className="border-dashed bg-muted/30 shadow-none">
-      <CardContent className="flex flex-col items-center gap-4 py-2 text-center sm:flex-row sm:justify-between sm:text-left">
+    <Card className="relative border-dashed bg-muted/30 shadow-none">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="absolute top-2 right-2"
+        onClick={() => setDismissed(true)}
+      >
+        <X className="size-4" />
+        <span className="sr-only">Dismiss</span>
+      </Button>
+      <CardContent className="flex flex-col items-center gap-4 py-2 pr-10 text-center sm:flex-row sm:justify-between sm:text-left">
         <div>
           <p className="font-medium">Want to keep this photo?</p>
           <p className="text-sm text-muted-foreground">
