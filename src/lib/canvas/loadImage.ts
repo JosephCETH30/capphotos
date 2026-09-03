@@ -6,7 +6,7 @@ export const ACCEPTED_IMAGE_TYPES = [
   "image/heif",
 ];
 
-export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 20MB
+export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50MB
 
 export class UploadValidationError extends Error {}
 
@@ -19,7 +19,7 @@ function isHeic(file: File): boolean {
 
 export function validateUploadFile(file: File): void {
   if (file.size > MAX_UPLOAD_BYTES) {
-    throw new UploadValidationError("Photo is too large. Please choose a file under 20MB.");
+    throw new UploadValidationError("Photo is too large. Please choose a file under 50MB.");
   }
   const isAccepted = ACCEPTED_IMAGE_TYPES.includes(file.type.toLowerCase()) || isHeic(file);
   if (!isAccepted) {

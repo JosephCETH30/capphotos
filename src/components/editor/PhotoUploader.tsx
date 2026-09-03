@@ -83,7 +83,7 @@ export function PhotoUploader({ fileName, isProcessing, onFileSelected, onClear 
           <>
             <ImageUp className="size-6 text-muted-foreground" />
             <p className="text-sm font-medium">Drag & drop a photo, or click to upload</p>
-            <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, or HEIC · up to 20MB</p>
+            <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, or HEIC · up to 50MB</p>
           </>
         )}
       </div>
